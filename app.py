@@ -18,12 +18,17 @@ CATEGORY_PRICES = {
     "gold": 599
 }
 
-# Booking form route
+# 🎯 Landing page (home)
 @app.route('/')
+def home():
+    return render_template('home.html')
+
+# Booking form
+@app.route('/book')
 def index():
     return render_template('index.html')
 
-# Handle form submission
+# Handle booking submission
 @app.route('/book', methods=['POST'])
 def book():
     session['name'] = request.form.get('name')
@@ -47,7 +52,7 @@ def book():
 def payment():
     return render_template('payment.html', amount=session.get('amount', 0))
 
-# Handle payment type and redirect
+# Handle payment
 @app.route('/confirm-payment', methods=['POST'])
 def confirm_payment():
     method = request.form.get("payment_method")
@@ -57,10 +62,8 @@ def confirm_payment():
         user_upi_id = request.form.get("upi_id")
         if not user_upi_id:
             return render_template("payment.html", amount=amount, error="Please enter your UPI ID.")
+        session['payer_upi'] = user_upi_id
 
-        session['payer_upi'] = user_upi_id  # Store user UPI (optional)
-
-        # Redirect to UPI payment intent for your UPI ID
         upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
         return redirect(upi_url)
 
@@ -77,7 +80,7 @@ def confirm_payment():
     else:
         return render_template("payment.html", amount=amount, error="Please select a payment method.")
 
-# Show success with QR code
+# Success page with QR code
 @app.route('/success')
 def success():
     name = session.get('name')
@@ -100,7 +103,7 @@ def success():
         qr_code=qr_base64
     )
 
-# Required for deployment on Render
+# Render-compatible run
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
