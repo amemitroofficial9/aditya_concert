@@ -57,9 +57,9 @@
       <label>Category</label>
       <select name="category" id="category" onchange="updateTotal()" required>
         <option value="">-- Select --</option>
-        <option value="fan">Fan Base - ₹1500</option>
-        <option value="general">General - ₹1000</option>
-        <option value="gold">Gold - ₹5</option>
+        <option value="fan">Fanpit - ₹2999</option>
+        <option value="general">General - ₹1499</option>
+        <option value="gold">Gold - ₹799</option>
       </select>
 
       <label>Tickets (Max 10)</label>
@@ -76,9 +76,9 @@
       const category = document.getElementById("category").value;
       const tickets = parseInt(document.getElementById("tickets").value) || 0;
       let price = 0;
-      if (category === "fan") price = 1500;
-      else if (category === "general") price = 1000;
-      else if (category === "gold") price = 5;
+      if (category === "fan") price = 2999;
+      else if (category === "general") price = 1499;
+      else if (category === "gold") price = 799;
       document.getElementById("total_display").innerText = "Total: ₹" + (tickets * price);
     }
   </script>

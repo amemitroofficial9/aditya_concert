@@ -13,9 +13,9 @@ RECEIVER_NAME = "Ame Mitro Concert"
 
 # Ticket categories with prices
 CATEGORY_PRICES = {
-    "fan": 1500,
-    "general": 1000,
-    "gold": 5
+    "fan": 2999,
+    "general": 1499,
+    "gold": 799
 }
 
 # 🎯 Landing page (home)
@@ -57,6 +57,15 @@ def payment():
 def confirm_payment():
     method = request.form.get("payment_method")
     amount = session.get("amount", 0)
+
+    # 🎁 Promo Code Logic
+    promo_code = request.form.get("promo_code", "").strip().lower()
+    if promo_code == "enjoy":
+        amount = int(amount * 0.9)  # 10% discount
+    elif promo_code:
+        return render_template("payment.html", amount=amount, error="❌ Invalid promo code")
+
+    session['amount'] = amount
 
     if method in ["phonepe", "gpay"]:
         user_upi_id = request.form.get("upi_id")
