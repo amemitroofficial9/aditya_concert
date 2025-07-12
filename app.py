@@ -1,65 +1,107 @@
 from flask import Flask, render_template, request, session, redirect
 import os
+import qrcode
+import base64
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = 'concert_secret_key'
 
+# Organizer details
 YOUR_UPI_ID = "9998143506@ybl"
 RECEIVER_NAME = "Ame Mitro Concert"
 
-# Ticket price mapping
+# Pricing for each category
 CATEGORY_PRICES = {
     "fan": 1500,
     "general": 1000,
     "gold": 599
 }
 
+# Homepage → Booking Form
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# Handle Booking Form Submission
 @app.route('/book', methods=['POST'])
 def book():
-    session['name'] = request.form['name']
-    session['phone'] = request.form['phone']
-    session['email'] = request.form['email']
-    session['category'] = request.form['category']
-    session['tickets'] = int(request.form['tickets'])
+    session['name'] = request.form.get('name')
+    session['phone'] = request.form.get('phone')
+    session['email'] = request.form.get('email')
+    category = request.form.get('category')
+    session['tickets'] = int(request.form.get('tickets', 0))
 
     if session['tickets'] > 10:
         return "You can only book up to 10 tickets."
 
-    category = session['category']
-    if category not in CATEGORY_PRICES:
-        return "Invalid ticket category selected."
+    if not category or category not in CATEGORY_PRICES:
+        return "Invalid or missing ticket category."
 
-    price = CATEGORY_PRICES[category]
-    session['amount'] = session['tickets'] * price
+    session['category'] = category
+    session['amount'] = session['tickets'] * CATEGORY_PRICES[category]
+
     return redirect('/payment')
 
+# Payment Page
 @app.route('/payment')
 def payment():
     return render_template('payment.html', amount=session.get('amount', 0))
 
+# Payment Method Handling
 @app.route('/confirm-payment', methods=['POST'])
 def confirm_payment():
-    upi_id = request.form.get('upi_id')
-    if not upi_id:
-        return render_template('payment.html', amount=session.get('amount', 0), error="❌ Please enter your UPI ID.")
+    method = request.form.get("payment_method")
+    amount = session.get("amount", 0)
 
-    # Redirect to UPI payment request
-    amount = session.get('amount', 0)
-    upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
-    return redirect(upi_url)
+    if method == "phonepe" or method == "gpay":
+        upi_id = request.form.get("upi_id")
+        if not upi_id:
+            return render_template("payment.html", amount=amount, error="Please enter your UPI ID.")
+        return redirect("/success")
 
+    elif method == "card":
+        card_number = request.form.get("card_number")
+        expiry = request.form.get("expiry")
+        cvv = request.form.get("cvv")
+        if not card_number or not expiry or not cvv:
+            return render_template("payment.html", amount=amount, error="Please fill in all card details.")
+        return redirect("/success")
+
+    elif method == "other":
+        other_option = request.form.get("other_option")
+        if not other_option:
+            return render_template("payment.html", amount=amount, error="Please select a valid payment option.")
+        return redirect("/success")
+
+    else:
+        return render_template("payment.html", amount=amount, error="Please select a payment method.")
+
+# Success Page with QR Code
 @app.route('/success')
 def success():
     name = session.get('name')
     tickets = session.get('tickets')
     category = session.get('category')
-    return render_template('success.html', name=name, tickets=tickets, category=category)
+    amount = session.get('amount')
 
-# ✅ Required for Render deployment
+    # Generate QR code with ticket info
+    qr_data = f"Name: {name}\nCategory: {category}\nTickets: {tickets}\nAmount: ₹{amount}"
+    qr_img = qrcode.make(qr_data)
+    buffer = BytesIO()
+    qr_img.save(buffer, format="PNG")
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    return render_template(
+        'success.html',
+        name=name,
+        tickets=tickets,
+        category=category,
+        amount=amount,
+        qr_code=qr_base64
+    )
+
+# Required for Render deployment
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
