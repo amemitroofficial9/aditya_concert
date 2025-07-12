@@ -50,23 +50,30 @@ def book():
 # Show payment method form
 @app.route('/payment')
 def payment():
-    return render_template('payment.html', amount=session.get('amount', 0))
+    return render_template('payment.html', amount=session.get('amount', 0), error=None)
 
 # Handle payment
 @app.route('/confirm-payment', methods=['POST'])
 def confirm_payment():
     method = request.form.get("payment_method")
-    amount = session.get("amount", 0)
+    original_amount = session.get("amount", 0)
 
     # 🎁 Promo Code Logic
     promo_code = request.form.get("promo_code", "").strip().lower()
     if promo_code == "enjoy":
-        amount = int(amount * 0.9)  # 10% discount
+        discount = int(original_amount * 0.10)
+        amount = int(original_amount - discount)
+        session['promo'] = promo_code
+        session['discount'] = discount
     elif promo_code:
-        return render_template("payment.html", amount=amount, error="❌ Invalid promo code")
+        return render_template("payment.html", amount=original_amount, error="❌ Invalid promo code")
+    else:
+        amount = original_amount
+        session['discount'] = 0
 
     session['amount'] = amount
 
+    # UPI Payment
     if method in ["phonepe", "gpay"]:
         user_upi_id = request.form.get("upi_id")
         if not user_upi_id:
@@ -76,11 +83,13 @@ def confirm_payment():
         upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
         return redirect(upi_url)
 
+    # Card Payment
     elif method == "card":
         if not request.form.get("card_number") or not request.form.get("expiry") or not request.form.get("cvv"):
             return render_template("payment.html", amount=amount, error="Please fill in all card details.")
         return redirect("/success")
 
+    # Other Payment Method
     elif method == "other":
         if not request.form.get("other_option"):
             return render_template("payment.html", amount=amount, error="Please select a valid payment option.")
@@ -96,6 +105,7 @@ def success():
     tickets = session.get('tickets')
     category = session.get('category')
     amount = session.get('amount')
+    discount = session.get('discount', 0)
 
     qr_data = f"Name: {name}\nCategory: {category}\nTickets: {tickets}\nAmount: ₹{amount}"
     qr_img = qrcode.make(qr_data)
@@ -109,6 +119,7 @@ def success():
         tickets=tickets,
         category=category,
         amount=amount,
+        discount=discount,
         qr_code=qr_base64
     )
 
