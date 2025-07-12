@@ -1,27 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>UPI Payment</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment - Concert Booking</title>
   <style>
-    body { font-family: Arial; background: #f8f8f8; padding: 40px; text-align: center; }
-    .box { background: white; padding: 30px; border-radius: 10px; width: 400px; margin: auto; box-shadow: 0 0 10px #ccc; }
-    input, button, select { width: 90%; padding: 10px; margin: 10px 0; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: green; color: white; font-weight: bold; }
-    .error { color: red; font-weight: bold; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      max-width: 450px;
+      width: 90%;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    p {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>💳 UPI Payment</h2>
-    <p><strong>Total to Pay:</strong> ₹{{ amount }}</p>
+  <div class="container">
+    <h2>🧾 Payment Details</h2>
+    <p>Total Amount: ₹{{ amount }}</p>
 
     {% if error %}
-      <p class="error">{{ error }}</p>
+      <div class="error">{{ error }}</div>
     {% endif %}
 
     <form method="POST" action="/confirm-payment">
-      <input type="text" name="upi_id" placeholder="Enter your UPI ID" required>
-      <p>After redirection, complete the payment in your UPI app.</p>
+      <label>UPI ID (Recommended)</label>
+      <input type="text" name="upi_id" placeholder="e.g., yourname@upi" />
+
+      <label>Other Payment Methods</label>
+      <select name="other_payment">
+        <option value="">Select if not using UPI</option>
+        <option value="card">💳 Debit/Credit Card</option>
+        <option value="gpay">📱 Google Pay</option>
+        <option value="paytm">📱 Paytm</option>
+        <option value="phonepe">📱 PhonePe</option>
+        <option value="netbanking">🏦 Net Banking</option>
+      </select>
+
       <button type="submit">Pay Now</button>
     </form>
   </div>
