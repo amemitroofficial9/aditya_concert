@@ -18,17 +18,14 @@ CATEGORY_PRICES = {
     "gold": 799
 }
 
-# 🎯 Landing page (home)
 @app.route('/')
 def home():
     return render_template('home.html')
 
-# Booking form
 @app.route('/book')
 def index():
     return render_template('index.html')
 
-# Handle booking submission
 @app.route('/book', methods=['POST'])
 def book():
     session['name'] = request.form.get('name')
@@ -45,32 +42,39 @@ def book():
 
     session['category'] = category
     session['amount'] = session['tickets'] * CATEGORY_PRICES[category]
+    session['promo'] = ''
+    session['discount'] = 0
+
     return redirect('/payment')
 
-# Show payment method form
-@app.route('/payment')
+@app.route('/payment', methods=['GET', 'POST'])
 def payment():
-    return render_template('payment.html', amount=session.get('amount', 0), error=None)
-
-# Handle payment
-@app.route('/confirm-payment', methods=['POST'])
-def confirm_payment():
-    method = request.form.get("payment_method")
     original_amount = session.get("amount", 0)
-
-    # 🎁 Promo Code Logic
     promo_code = request.form.get("promo_code", "").strip().lower()
-    if promo_code == "enjoy":
-        discount = int(original_amount * 0.10)
-        amount = int(original_amount - discount)
-        session['promo'] = promo_code
-        session['discount'] = discount
-    elif promo_code:
-        return render_template("payment.html", amount=original_amount, error="❌ Invalid promo code")
-    else:
-        amount = original_amount
-        session['discount'] = 0
+    apply_promo = request.form.get("apply_promo") == "yes"
+    method = request.form.get("payment_method")
 
+    # If applying promo only
+    if apply_promo:
+        if promo_code == "enjoy":
+            discount = int(original_amount * 0.10)
+            final_amount = original_amount - discount
+            session['promo'] = promo_code
+            session['discount'] = discount
+        elif promo_code:
+            session['promo'] = ''
+            session['discount'] = 0
+            return render_template("payment.html", amount=original_amount, error="❌ Invalid promo code")
+        else:
+            session['promo'] = ''
+            session['discount'] = 0
+            final_amount = original_amount
+
+        return render_template("payment.html", amount=session.get("amount", original_amount))
+
+    # Now confirm actual payment
+    discount = session.get("discount", 0)
+    amount = original_amount - discount
     session['amount'] = amount
 
     # UPI Payment
@@ -79,7 +83,6 @@ def confirm_payment():
         if not user_upi_id:
             return render_template("payment.html", amount=amount, error="Please enter your UPI ID.")
         session['payer_upi'] = user_upi_id
-
         upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
         return redirect(upi_url)
 
@@ -95,10 +98,11 @@ def confirm_payment():
             return render_template("payment.html", amount=amount, error="Please select a valid payment option.")
         return f"<h2>🔧 '{request.form.get('other_option')}' payment method coming soon. Please use UPI for now.</h2>"
 
-    else:
-        return render_template("payment.html", amount=amount, error="Please select a payment method.")
+    elif method:
+        return render_template("payment.html", amount=amount, error="❌ Invalid payment method.")
 
-# Success page with QR code
+    return render_template("payment.html", amount=amount)
+
 @app.route('/success')
 def success():
     name = session.get('name')
@@ -123,7 +127,6 @@ def success():
         qr_code=qr_base64
     )
 
-# Render-compatible run
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

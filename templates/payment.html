@@ -19,7 +19,7 @@
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 0 12px rgba(0,0,0,0.1);
-      max-width: 480px;
+      max-width: 500px;
       width: 90%;
     }
     h2, p {
@@ -37,6 +37,23 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+    .promo-row {
+      display: flex;
+      gap: 10px;
+    }
+    .promo-row input {
+      flex: 1;
+    }
+    .promo-row button {
+      width: auto;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
     .hidden {
       display: none;
     }
@@ -50,7 +67,7 @@
       text-align: center;
       font-weight: bold;
     }
-    button {
+    button[type="submit"] {
       width: 100%;
       padding: 12px;
       background: #28a745;
@@ -75,7 +92,7 @@
       <p class="error">{{ error }}</p>
     {% endif %}
 
-    <form method="POST" action="/confirm-payment">
+    <form method="POST" action="/payment">
       <label>Select Payment Method</label>
       <select name="payment_method" id="payment_method" required onchange="showFields()">
         <option value="">-- Choose an option --</option>
@@ -86,7 +103,10 @@
       </select>
 
       <label>🎁 Promo Code</label>
-      <input type="text" name="promo_code" placeholder="Enter promo code (optional)">
+      <div class="promo-row">
+        <input type="text" name="promo_code" placeholder="Enter promo code" value="{{ session.promo if session.promo }}">
+        <button type="submit" name="apply_promo" value="yes">Apply</button>
+      </div>
 
       <!-- UPI ID for PhonePe or GPay -->
       <div id="upi_section" class="hidden">
