@@ -7,41 +7,50 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      margin: 0;
       background: #f4f4f4;
+      margin: 0;
+      padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px;
     }
+
     .card {
       background: white;
       padding: 20px;
       border-radius: 15px;
-      max-width: 420px;
-      width: 100%;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 420px;
+      width: 90%;
       text-align: center;
     }
+
     .card img {
       width: 100%;
+      max-height: 300px;
+      object-fit: cover;
       border-radius: 10px;
     }
+
     .card h2 {
       margin-top: 15px;
       font-size: 22px;
+      color: #222;
     }
+
     .info {
-      margin: 10px 0;
       font-size: 15px;
       color: #555;
+      margin: 5px 0;
     }
+
     .description {
       font-size: 14px;
       color: #444;
       margin: 15px 0;
     }
+
     .book-btn {
       display: inline-block;
       padding: 12px 20px;
@@ -51,12 +60,17 @@
       text-decoration: none;
       border-radius: 6px;
       margin-top: 10px;
+      transition: background 0.2s;
+    }
+
+    .book-btn:hover {
+      background: #218838;
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <img src="https://i.imgur.com/H0Q9EGk.jpg" alt="Aditya Gadhvi"> <!-- Replace with your image URL -->
+    <img src="https://static.toiimg.com/thumb/msid-94854407,imgsize-33272,width-400,resizemode-4/94854407.jpg" alt="Aditya Gadhvi">
     <h2>🎤 Aditya Gadhvi Live in Concert</h2>
     <div class="info">📅 <strong>Date:</strong> 25th August 2025</div>
     <div class="info">📍 <strong>Venue:</strong> Rajpath Club, Ahmedabad</div>
