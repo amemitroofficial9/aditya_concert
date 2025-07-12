@@ -7,23 +7,23 @@ from io import BytesIO
 app = Flask(__name__)
 app.secret_key = 'concert_secret_key'
 
-# Organizer details
+# Organizer UPI details
 YOUR_UPI_ID = "9998143506@ybl"
 RECEIVER_NAME = "Ame Mitro Concert"
 
-# Pricing for each category
+# Ticket categories with prices
 CATEGORY_PRICES = {
     "fan": 1500,
     "general": 1000,
     "gold": 599
 }
 
-# Homepage → Booking Form
+# Booking form route
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Handle Booking Form Submission
+# Handle form submission
 @app.route('/book', methods=['POST'])
 def book():
     session['name'] = request.form.get('name')
@@ -40,44 +40,44 @@ def book():
 
     session['category'] = category
     session['amount'] = session['tickets'] * CATEGORY_PRICES[category]
-
     return redirect('/payment')
 
-# Payment Page
+# Show payment method form
 @app.route('/payment')
 def payment():
     return render_template('payment.html', amount=session.get('amount', 0))
 
-# Payment Method Handling
+# Handle payment type and redirect
 @app.route('/confirm-payment', methods=['POST'])
 def confirm_payment():
     method = request.form.get("payment_method")
     amount = session.get("amount", 0)
 
-    if method == "phonepe" or method == "gpay":
-        upi_id = request.form.get("upi_id")
-        if not upi_id:
+    if method in ["phonepe", "gpay"]:
+        user_upi_id = request.form.get("upi_id")
+        if not user_upi_id:
             return render_template("payment.html", amount=amount, error="Please enter your UPI ID.")
-        return redirect("/success")
+
+        session['payer_upi'] = user_upi_id  # Store user UPI (optional)
+
+        # Redirect to UPI payment intent for your UPI ID
+        upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
+        return redirect(upi_url)
 
     elif method == "card":
-        card_number = request.form.get("card_number")
-        expiry = request.form.get("expiry")
-        cvv = request.form.get("cvv")
-        if not card_number or not expiry or not cvv:
+        if not request.form.get("card_number") or not request.form.get("expiry") or not request.form.get("cvv"):
             return render_template("payment.html", amount=amount, error="Please fill in all card details.")
         return redirect("/success")
 
     elif method == "other":
-        other_option = request.form.get("other_option")
-        if not other_option:
+        if not request.form.get("other_option"):
             return render_template("payment.html", amount=amount, error="Please select a valid payment option.")
-        return redirect("/success")
+        return f"<h2>🔧 '{request.form.get('other_option')}' payment method coming soon. Please use UPI for now.</h2>"
 
     else:
         return render_template("payment.html", amount=amount, error="Please select a payment method.")
 
-# Success Page with QR Code
+# Show success with QR code
 @app.route('/success')
 def success():
     name = session.get('name')
@@ -85,7 +85,6 @@ def success():
     category = session.get('category')
     amount = session.get('amount')
 
-    # Generate QR code with ticket info
     qr_data = f"Name: {name}\nCategory: {category}\nTickets: {tickets}\nAmount: ₹{amount}"
     qr_img = qrcode.make(qr_data)
     buffer = BytesIO()
@@ -101,7 +100,7 @@ def success():
         qr_code=qr_base64
     )
 
-# Required for Render deployment
+# Required for deployment on Render
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
