@@ -44,6 +44,7 @@
 
     .promo-row {
       display: flex;
+      align-items: center;
       gap: 10px;
     }
 
@@ -51,17 +52,21 @@
       flex: 1;
       padding: 10px;
       font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
-    .promo-row button {
-      padding: 10px 16px;
-      font-size: 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
+    .promo-row label.apply-label {
+      color: #007bff;
       cursor: pointer;
-      height: 100%;
+      font-size: 16px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      user-select: none;
+    }
+
+    .promo-row label.apply-label:hover {
+      text-decoration: underline;
     }
 
     .hidden {
@@ -117,9 +122,12 @@
 
       <label>🎁 Promo Code</label>
       <div class="promo-row">
-        <input type="text" name="promo_code" placeholder="Enter promo code" value="{{ session.promo if session.promo }}">
-        <button type="submit" name="apply_promo" value="yes">Apply</button>
+        <input type="text" name="promo_code" id="promo_code" placeholder="Enter promo code" value="{{ session.promo if session.promo }}">
+        <label class="apply-label" onclick="applyPromo()">Apply</label>
       </div>
+
+      <!-- Hidden submit input for JS trigger -->
+      <input type="hidden" name="apply_promo" value="yes" />
 
       <!-- UPI ID -->
       <div id="upi_section" class="hidden">
@@ -168,6 +176,11 @@
       } else if (method === "other") {
         document.getElementById("other_section").classList.remove("hidden");
       }
+    }
+
+    function applyPromo() {
+      const form = document.querySelector("form");
+      form.submit();
     }
   </script>
 </body>
