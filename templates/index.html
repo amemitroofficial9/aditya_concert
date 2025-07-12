@@ -1,24 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Book Concert Tickets</title>
-  <style>
-    body { font-family: Arial; background: #f2f2f2; text-align: center; padding: 50px; }
-    .form-box { background: white; padding: 30px; width: 400px; margin: auto; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-    input, button { width: 90%; padding: 10px; margin: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: green; color: white; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aditya Gadhvi Concert Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0; padding: 0;
+            background: #f8f8f8;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        @media (min-width: 600px) {
+            .container {
+                max-width: 500px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="form-box">
-    <h2>🎤 Aditya Gadhvi Live Concert</h2>
-    <form method="POST" action="/book">
-      <input type="text" name="name" placeholder="Enter your name" required>
-      <input type="text" name="phone" placeholder="Enter your phone number" required>
-      <input type="email" name="email" placeholder="Enter your email" required>
-      <input type="number" name="tickets" placeholder="Number of tickets (Max 10)" min="1" max="10" required>
-      <button type="submit">Continue to Payment</button>
-    </form>
-  </div>
+    <div class="container">
+        <h2>🎤 Aditya Gadhvi Live</h2>
+        <form action="/book" method="POST">
+            <label>Your Name</label>
+            <input type="text" name="name" required>
+
+            <label>Phone Number</label>
+            <input type="tel" name="phone" required>
+
+            <label>Email</label>
+            <input type="email" name="email" required>
+
+            <label>Tickets (Max 10)</label>
+            <input type="number" name="tickets" min="1" max="10" required>
+
+            <button type="submit">Book Now</button>
+        </form>
+    </div>
 </body>
 </html>
