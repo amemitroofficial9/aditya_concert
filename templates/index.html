@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Book Concert Tickets</title>
+  <style>
+    body { font-family: Arial; background: #f2f2f2; text-align: center; padding: 50px; }
+    .form-box { background: white; padding: 30px; width: 400px; margin: auto; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    input, button { width: 90%; padding: 10px; margin: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: green; color: white; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="form-box">
+    <h2>🎤 Aditya Gadhvi Live Concert</h2>
+    <form method="POST" action="/book">
+      <input type="text" name="name" placeholder="Enter your name" required>
+      <input type="text" name="phone" placeholder="Enter your phone number" required>
+      <input type="email" name="email" placeholder="Enter your email" required>
+      <input type="number" name="tickets" placeholder="Number of tickets (Max 10)" min="1" max="10" required>
+      <button type="submit">Continue to Payment</button>
+    </form>
+  </div>
+</body>
+</html>

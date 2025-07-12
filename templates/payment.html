@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UPI Payment</title>
+  <style>
+    body { font-family: Arial; background: #f8f8f8; padding: 40px; text-align: center; }
+    .box { background: white; padding: 30px; border-radius: 10px; width: 400px; margin: auto; box-shadow: 0 0 10px #ccc; }
+    input, button, select { width: 90%; padding: 10px; margin: 10px 0; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: green; color: white; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>💳 UPI Payment</h2>
+    <p><strong>Total to Pay:</strong> ₹{{ amount }}</p>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" action="/confirm-payment">
+      <input type="text" name="upi_id" placeholder="Enter your UPI ID" required>
+      <p>After redirection, complete the payment in your UPI app.</p>
+      <button type="submit">Pay Now</button>
+    </form>
+  </div>
+</body>
+</html>
