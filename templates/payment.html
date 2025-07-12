@@ -19,35 +19,30 @@
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 0 12px rgba(0,0,0,0.1);
-      max-width: 450px;
+      max-width: 480px;
       width: 90%;
     }
-    h2 {
+    h2, p {
       text-align: center;
-      margin-bottom: 10px;
-    }
-    p {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 20px;
     }
     label {
       display: block;
-      margin: 10px 0 5px;
+      margin: 12px 0 5px;
       font-weight: bold;
     }
-    input[type="text"],
-    select {
+    input, select {
       width: 100%;
       padding: 10px;
-      border: 1px solid #ccc;
+      margin-bottom: 10px;
       border-radius: 6px;
-      margin-bottom: 15px;
+      border: 1px solid #ccc;
+    }
+    .hidden {
+      display: none;
     }
     .error {
       color: red;
       font-size: 14px;
-      margin-bottom: 10px;
     }
     button {
       width: 100%;
@@ -63,29 +58,71 @@
 </head>
 <body>
   <div class="container">
-    <h2>🧾 Payment Details</h2>
+    <h2>💳 Payment</h2>
     <p>Total Amount: ₹{{ amount }}</p>
 
     {% if error %}
-      <div class="error">{{ error }}</div>
+      <p class="error">{{ error }}</p>
     {% endif %}
 
     <form method="POST" action="/confirm-payment">
-      <label>UPI ID (Recommended)</label>
-      <input type="text" name="upi_id" placeholder="e.g., yourname@upi" />
-
-      <label>Other Payment Methods</label>
-      <select name="other_payment">
-        <option value="">Select if not using UPI</option>
+      <label>Select Payment Method</label>
+      <select name="payment_method" id="payment_method" required onchange="showFields()">
+        <option value="">-- Choose an option --</option>
+        <option value="phonepe">📱 PhonePe UPI</option>
+        <option value="gpay">📱 Google Pay UPI</option>
         <option value="card">💳 Debit/Credit Card</option>
-        <option value="gpay">📱 Google Pay</option>
-        <option value="paytm">📱 Paytm</option>
-        <option value="phonepe">📱 PhonePe</option>
-        <option value="netbanking">🏦 Net Banking</option>
+        <option value="other">🌐 Other Payment Method</option>
       </select>
 
-      <button type="submit">Pay Now</button>
+      <!-- UPI ID for PhonePe or GPay -->
+      <div id="upi_section" class="hidden">
+        <label>Enter Your UPI ID</label>
+        <input type="text" name="upi_id" placeholder="example@ybl or example@okaxis">
+      </div>
+
+      <!-- Card Section -->
+      <div id="card_section" class="hidden">
+        <label>Card Number</label>
+        <input type="text" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19">
+
+        <label>Expiry Date</label>
+        <input type="text" name="expiry" placeholder="MM/YY">
+
+        <label>CVV</label>
+        <input type="text" name="cvv" placeholder="123" maxlength="4">
+      </div>
+
+      <!-- Other Payment -->
+      <div id="other_section" class="hidden">
+        <label>Choose Option</label>
+        <select name="other_option">
+          <option value="">-- Choose --</option>
+          <option value="paytm">Paytm</option>
+          <option value="netbanking">Net Banking</option>
+          <option value="amazonpay">Amazon Pay</option>
+        </select>
+      </div>
+
+      <button type="submit">Proceed to Pay</button>
     </form>
   </div>
+
+  <script>
+    function showFields() {
+      const method = document.getElementById("payment_method").value;
+      document.getElementById("upi_section").classList.add("hidden");
+      document.getElementById("card_section").classList.add("hidden");
+      document.getElementById("other_section").classList.add("hidden");
+
+      if (method === "phonepe" || method === "gpay") {
+        document.getElementById("upi_section").classList.remove("hidden");
+      } else if (method === "card") {
+        document.getElementById("card_section").classList.remove("hidden");
+      } else if (method === "other") {
+        document.getElementById("other_section").classList.remove("hidden");
+      }
+    }
+  </script>
 </body>
 </html>
