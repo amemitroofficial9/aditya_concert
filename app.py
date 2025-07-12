@@ -15,7 +15,7 @@ RECEIVER_NAME = "Ame Mitro Concert"
 CATEGORY_PRICES = {
     "fan": 1500,
     "general": 1000,
-    "gold": 599
+    "gold": 5
 }
 
 # 🎯 Landing page (home)
