@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, session, redirect
+import os
 
 app = Flask(__name__)
 app.secret_key = 'concert_secret_key'
@@ -45,5 +46,7 @@ def success():
     tickets = session.get('tickets')
     return render_template('success.html', name=name, tickets=tickets)
 
+# ✅ This line is required for Render
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
