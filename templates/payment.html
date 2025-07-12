@@ -14,6 +14,7 @@
       min-height: 100vh;
       margin: 0;
     }
+
     .container {
       background: white;
       padding: 20px;
@@ -22,14 +23,17 @@
       max-width: 500px;
       width: 90%;
     }
+
     h2, p {
       text-align: center;
     }
+
     label {
       display: block;
       margin: 12px 0 5px;
       font-weight: bold;
     }
+
     input, select {
       width: 100%;
       padding: 10px;
@@ -37,36 +41,45 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     .promo-row {
       display: flex;
       gap: 10px;
     }
+
     .promo-row input {
       flex: 1;
-    }
-    .promo-row button {
-      width: auto;
       padding: 10px;
+      font-size: 16px;
+    }
+
+    .promo-row button {
+      padding: 10px 16px;
+      font-size: 16px;
       background-color: #007bff;
       color: white;
       border: none;
       border-radius: 6px;
-      font-size: 14px;
       cursor: pointer;
+      height: 100%;
     }
+
     .hidden {
       display: none;
     }
+
     .error {
       color: red;
       font-size: 14px;
       text-align: center;
     }
+
     .discount {
       color: green;
       text-align: center;
       font-weight: bold;
     }
+
     button[type="submit"] {
       width: 100%;
       padding: 12px;
@@ -108,7 +121,7 @@
         <button type="submit" name="apply_promo" value="yes">Apply</button>
       </div>
 
-      <!-- UPI ID for PhonePe or GPay -->
+      <!-- UPI ID -->
       <div id="upi_section" class="hidden">
         <label>Enter Your UPI ID</label>
         <input type="text" name="upi_id" placeholder="example@ybl or example@okaxis">
@@ -126,7 +139,7 @@
         <input type="text" name="cvv" placeholder="123" maxlength="4">
       </div>
 
-      <!-- Other Payment -->
+      <!-- Other Section -->
       <div id="other_section" class="hidden">
         <label>Choose Option</label>
         <select name="other_option">
