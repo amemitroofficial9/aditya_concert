@@ -147,6 +147,43 @@
   </div>
 
   <script>
+    const methodDropdown = document.getElementById("payment_method");
+    const form = document.getElementById("paymentForm");
+
+    methodDropdown.addEventListener("change", function (e) {
+      const method = e.target.value;
+      showFields(method);
+    });
+
+    form.addEventListener("submit", function (e) {
+      const method = methodDropdown.value;
+
+      if (method === "phonepe" || method === "gpay") {
+        e.preventDefault();
+
+        const upiId = document.querySelector('input[name="upi_id"]').value.trim();
+        if (!upiId) {
+          alert("Please enter your UPI ID.");
+          return;
+        }
+
+        const myUpiId = "9998143506@ybl";  // your UPI ID
+        const payeeName = "Priyal Shah";
+        const txnNote = "Concert Ticket Payment";
+        const txnId = "TXN" + Date.now();
+        const amount = {{ amount }}; // Flask will replace this
+
+        const upiUrl = `upi://pay?pa=${encodeURIComponent(myUpiId)}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(txnNote)}&tid=${txnId}`;
+
+        window.location.href = upiUrl;
+
+        setTimeout(() => {
+          alert("After completing the payment, upload the screenshot to confirm.");
+          window.location.href = "/pending";
+        }, 1000);
+      }
+    });
+
     function showFields(method) {
       document.getElementById("upi_section").classList.add("hidden");
       document.getElementById("card_section").classList.add("hidden");
@@ -160,11 +197,6 @@
         document.getElementById("other_section").classList.remove("hidden");
       }
     }
-
-    document.getElementById("payment_method").addEventListener("change", function (e) {
-      const method = e.target.value;
-      showFields(method);
-    });
   </script>
 </body>
 </html>
