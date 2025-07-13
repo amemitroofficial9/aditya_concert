@@ -1,17 +1,16 @@
-from flask import Flask, render_template, request, session, redirect
+from flask import Flask, render_template, request, redirect, session, url_for
 import os
-import qrcode
-import base64
-from io import BytesIO
+import pytesseract
+from PIL import Image
 
 app = Flask(__name__)
-app.secret_key = 'concert_secret_key'
+app.secret_key = "concert_secret_key"
 
-# Organizer UPI details
-YOUR_UPI_ID = "9998143506@ybl"
-RECEIVER_NAME = "Ame Mitro Concert"
+# Folder to store uploaded screenshots
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Ticket categories with prices
 CATEGORY_PRICES = {
     "fan": 2999,
     "general": 1499,
@@ -20,106 +19,89 @@ CATEGORY_PRICES = {
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    return render_template("home.html")
 
-@app.route('/book')
-def index():
-    return render_template('index.html')
-
-@app.route('/book', methods=['POST'])
+@app.route('/book', methods=["GET", "POST"])
 def book():
-    session['name'] = request.form.get('name')
-    session['phone'] = request.form.get('phone')
-    session['email'] = request.form.get('email')
-    category = request.form.get('category')
-    session['tickets'] = int(request.form.get('tickets', 0))
+    if request.method == "POST":
+        session["name"] = request.form.get("name")
+        session["phone"] = request.form.get("phone")
+        session["email"] = request.form.get("email")
+        category = request.form.get("category")
+        session["tickets"] = int(request.form.get("tickets", 1))
 
-    if session['tickets'] > 10:
-        return "You can only book up to 10 tickets."
+        if category not in CATEGORY_PRICES:
+            return "Invalid category selected."
 
-    if not category or category not in CATEGORY_PRICES:
-        return "Invalid or missing ticket category."
+        amount = CATEGORY_PRICES[category] * session["tickets"]
+        session["category"] = category
+        session["amount"] = amount
 
-    session['category'] = category
-    session['amount'] = session['tickets'] * CATEGORY_PRICES[category]
-    return redirect('/payment')
+        return redirect("/payment")
 
-@app.route('/payment', methods=['GET', 'POST'])
+    return render_template("index.html")
+
+@app.route('/payment', methods=["GET", "POST"])
 def payment():
-    if request.method == 'POST':
-        method = request.form.get("payment_method")
+    error = None
+    amount = session.get("amount", 0)
+
+    if request.method == "POST":
         promo_code = request.form.get("promo_code", "").strip().lower()
-        user_upi_id = request.form.get("upi_id")
+        method = request.form.get("payment_method")
 
-        # Base amount
-        tickets = session.get("tickets", 1)
-        category = session.get("category")
-        base_amount = CATEGORY_PRICES.get(category, 0) * tickets
+        # Apply promo logic
+        if promo_code:
+            if promo_code == "enjoy":
+                discount = int(amount * 0.10)
+                session["promo"] = "enjoy"
+                session["discount"] = discount
+                session["amount"] = amount - discount
+                amount = amount - discount
+            else:
+                error = "❌ Invalid promo code"
+                session.pop("promo", None)
+                session.pop("discount", None)
 
-        # Apply promo code
-        if promo_code == "enjoy":
-            amount = int(base_amount * 0.9)
-            session['promo'] = 'enjoy'
-            session['discount'] = base_amount - amount
-        else:
-            amount = base_amount
-            session['promo'] = ''
-            session['discount'] = 0
-            if promo_code != "":
-                return render_template("payment.html", amount=amount, error="❌ Invalid promo code")
+        if method:
+            session["payment_method"] = method
+            if method in ["phonepe", "gpay", "other"]:
+                return redirect("/pending")
+            elif method == "card":
+                return redirect("/card")
 
-        session['amount'] = amount
+    return render_template("payment.html", amount=session.get("amount", 0), error=error)
 
-        if method in ["phonepe", "gpay"]:
-            if not user_upi_id:
-                return render_template("payment.html", amount=amount, error="Please enter your UPI ID.")
-
-            upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
-            session['upi_url'] = upi_url
-            return redirect('/pending')
-
-        elif method == "card":
-            if not request.form.get("card_number") or not request.form.get("expiry") or not request.form.get("cvv"):
-                return render_template("payment.html", amount=amount, error="Please fill in all card details.")
-            return redirect("/success")
-
-        elif method == "other":
-            if not request.form.get("other_option"):
-                return render_template("payment.html", amount=amount, error="Please select a valid payment option.")
-            return f"<h2>🔧 '{request.form.get('other_option')}' payment method coming soon. Please use UPI for now.</h2>"
-
-        else:
-            return render_template("payment.html", amount=amount, error="Please select a payment method.")
-    else:
-        return render_template("payment.html", amount=session.get('amount', 0))
-
-@app.route('/pending')
+@app.route('/pending', methods=["GET", "POST"])
 def pending():
-    upi_url = session.get('upi_url')
-    return render_template("pending.html", upi_url=upi_url)
+    if request.method == "POST":
+        file = request.files.get("payment_screenshot")
+        if file:
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file.save(filepath)
+
+            # Use pytesseract to extract text from the image
+            try:
+                text = pytesseract.image_to_string(Image.open(filepath))
+                if "shah priyal shripal bhai" in text.lower():
+                    return redirect("/success")
+                else:
+                    return "❌ Payment not verified. Name not found in screenshot."
+            except Exception as e:
+                return f"Error reading image: {e}"
+
+    return render_template("pending.html")
+
+@app.route('/card', methods=["GET", "POST"])
+def card():
+    return render_template("card_payment.html")
 
 @app.route('/success')
 def success():
-    name = session.get('name')
-    tickets = session.get('tickets')
-    category = session.get('category')
-    amount = session.get('amount')
+    return render_template("success.html", name=session.get("name"),
+                           category=session.get("category"),
+                           tickets=session.get("tickets"),
+                           amount=session.get("amount"))
 
-    qr_data = f"Name: {name}\nCategory: {category}\nTickets: {tickets}\nAmount: ₹{amount}"
-    qr_img = qrcode.make(qr_data)
-    buffer = BytesIO()
-    qr_img.save(buffer, format="PNG")
-    qr_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-    return render_template(
-        'success.html',
-        name=name,
-        tickets=tickets,
-        category=category,
-        amount=amount,
-        qr_code=qr_base64
-    )
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)

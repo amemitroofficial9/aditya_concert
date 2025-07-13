@@ -85,6 +85,12 @@
       font-weight: bold;
     }
 
+    .success-message {
+      color: green;
+      text-align: center;
+      font-size: 15px;
+    }
+
     button[type="submit"] {
       width: 100%;
       padding: 12px;
@@ -104,6 +110,7 @@
 
     {% if session.promo == 'enjoy' %}
       <p class="discount">🎉 Promo 'ENJOY' Applied! You saved ₹{{ session.discount }}!</p>
+      <p class="success-message">✅ Promo code applied successfully!</p>
     {% endif %}
 
     {% if error %}

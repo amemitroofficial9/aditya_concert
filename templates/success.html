@@ -1,34 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Payment Successful</title>
+  <title>Booking Confirmed</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
+      font-family: Arial;
       background: #e8f5e9;
-      padding: 50px;
+      padding: 40px;
+      text-align: center;
     }
-    .qr {
+    .container {
+      background: white;
+      max-width: 500px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px #ccc;
+    }
+    img {
+      max-width: 200px;
       margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>🎉 Payment Successful!</h1>
-  <p><strong>Name:</strong> {{ name }}</p>
-  <p><strong>Category:</strong> {{ category }}</p>
-  <p><strong>Tickets:</strong> {{ tickets }}</p>
-  {% if session.promo == 'enjoy' %}
-    <p><strong>Promo Applied:</strong> ENJOY (10% OFF)</p>
-    <p><strong>You Saved:</strong> ₹{{ session.discount }}</p>
-  {% endif %}
-  <p><strong>Total Paid:</strong> ₹{{ amount }}</p>
-
-  <div class="qr">
-    <h3>🎟️ Your Ticket QR</h3>
-    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+  <div class="container">
+    <h2>✅ Booking Confirmed!</h2>
+    <p><strong>Name:</strong> {{ name }}</p>
+    <p><strong>Category:</strong> {{ category }}</p>
+    <p><strong>Tickets:</strong> {{ tickets }}</p>
+    <p><strong>Total Paid:</strong> ₹{{ amount }}</p>
+    <p>Thank you for booking! Show this at the entrance.</p>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ name }} - {{ tickets }}x {{ category }}&size=200x200" alt="QR Code" />
   </div>
 </body>
 </html>

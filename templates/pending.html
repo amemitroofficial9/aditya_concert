@@ -1,41 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Complete Payment</title>
+  <title>Confirm Your Payment</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial;
+      background: #f4f4f4;
+      padding: 40px;
       text-align: center;
-      background: #f2f2f2;
-      padding: 50px;
     }
-    a.button, button {
-      padding: 12px 20px;
+    .container {
+      background: white;
+      max-width: 400px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    input[type="file"], button {
+      width: 90%;
+      margin-top: 10px;
+      padding: 10px;
       font-size: 16px;
-      background-color: #28a745;
+    }
+    button {
+      background: green;
       color: white;
       border: none;
-      border-radius: 8px;
-      margin: 10px;
-      text-decoration: none;
-      display: inline-block;
-    }
-    .button-secondary {
-      background-color: #dc3545;
+      border-radius: 6px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h2>🔄 Complete Payment</h2>
-  <p>Click below to open your UPI app and complete the payment:</p>
-  <a href="{{ upi_url }}" class="button">Open UPI App</a>
+  <div class="container">
+    <h2>📸 Upload Payment Screenshot</h2>
+    <p>Please upload the screenshot of your payment made to <strong>Shah Priyal Shripal Bhai</strong>.</p>
 
-  <form action="/success" method="get" style="margin-top: 30px;">
-    <button type="submit">✅ I Have Paid</button>
-  </form>
-  <form action="/payment" method="get">
-    <button type="submit" class="button-secondary">❌ Payment Not Done</button>
-  </form>
+    <form action="/pending" method="POST" enctype="multipart/form-data">
+      <input type="file" name="payment_screenshot" required />
+      <button type="submit">I Have Paid</button>
+    </form>
+  </div>
 </body>
 </html>
