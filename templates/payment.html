@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payment - Concert Booking</title>
   <style>
-    /* ... your existing styles ... */
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
@@ -169,22 +168,25 @@
       showFields(method);
 
       if(method === "phonepe" || method === "gpay") {
-        // Prevent normal form submission and trigger UPI app open
-        event.target.form.addEventListener('submit', function(e) {
-          e.preventDefault(); // Prevent form submission
+        // Remove any old listeners
+        const oldForm = document.getElementById('paymentForm');
+        const newForm = oldForm.cloneNode(true);
+        oldForm.parentNode.replaceChild(newForm, oldForm);
+
+        newForm.addEventListener('submit', function(e) {
+          e.preventDefault(); // Prevent actual form submit
           openUpiApp(method);
-        }, { once: true });  // only once to avoid multiple listeners
+        });
       } else {
-        // Remove any previously attached submit event listeners for UPI
-        const form = document.getElementById('paymentForm');
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
+        // Remove any UPI-specific submit listener by resetting form (if needed)
+        const oldForm = document.getElementById('paymentForm');
+        const newForm = oldForm.cloneNode(true);
+        oldForm.parentNode.replaceChild(newForm, oldForm);
       }
     }
 
     function openUpiApp(method) {
-      // Get amount and UPI ID
-      const amount = {{ amount }}; // From Jinja
+      const amount = {{ amount }}; // from Flask backend
       const upiInput = document.querySelector('input[name="upi_id"]');
       const upiId = upiInput ? upiInput.value.trim() : "";
 
@@ -193,19 +195,21 @@
         return;
       }
 
-      const payeeName = "AdityaConcert";  // Replace with your payee name
+      // Your real UPI ID here:
+      const myUpiId = "9998143506@ybl"; // <-- Replace this with your actual UPI ID
+      const payeeName = "Priyal shah";       // <-- Replace this with your name or business name
       const txnNote = "Concert Ticket Payment";
-      const txnId = "TXN" + Date.now();  // Unique txn id
+      const txnId = "TXN" + Date.now();
 
-      // Build UPI URL scheme
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(txnNote)}&tid=${txnId}`;
+      // Build the UPI payment URL
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(myUpiId)}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(txnNote)}&tid=${txnId}`;
 
-      // Redirect to UPI app
+      // Open UPI payment app
       window.location.href = upiUrl;
 
-      // Optional: After redirect, you can show a message or redirect to a page to upload screenshot or confirm payment
+      // After redirecting, show alert and send user to screenshot upload page
       alert("After completing payment in your UPI app, please upload your payment screenshot to confirm.");
-      window.location.href = "/pending";  // redirect user to screenshot upload page
+      window.location.href = "/pending";
     }
   </script>
 </body>
