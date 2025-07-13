@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Complete Payment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f2f2f2;
+      padding: 50px;
+    }
+    a.button, button {
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      margin: 10px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .button-secondary {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔄 Complete Payment</h2>
+  <p>Click below to open your UPI app and complete the payment:</p>
+  <a href="{{ upi_url }}" class="button">Open UPI App</a>
+
+  <form action="/success" method="get" style="margin-top: 30px;">
+    <button type="submit">✅ I Have Paid</button>
+  </form>
+  <form action="/payment" method="get">
+    <button type="submit" class="button-secondary">❌ Payment Not Done</button>
+  </form>
+</body>
+</html>

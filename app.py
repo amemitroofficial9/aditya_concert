@@ -42,66 +42,61 @@ def book():
 
     session['category'] = category
     session['amount'] = session['tickets'] * CATEGORY_PRICES[category]
-    session['promo'] = ''
-    session['discount'] = 0
-
     return redirect('/payment')
 
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
-    original_amount = session.get("amount", 0)
-    promo_code = request.form.get("promo_code", "").strip().lower()
-    apply_promo = request.form.get("apply_promo") == "yes"
-    method = request.form.get("payment_method")
-
-    # If applying promo only
-    if apply_promo:
-        if promo_code == "enjoy":
-            discount = int(original_amount * 0.10)
-            final_amount = original_amount - discount
-            session['promo'] = promo_code
-            session['discount'] = discount
-        elif promo_code:
-            session['promo'] = ''
-            session['discount'] = 0
-            return render_template("payment.html", amount=original_amount, error="❌ Invalid promo code")
-        else:
-            session['promo'] = ''
-            session['discount'] = 0
-            final_amount = original_amount
-
-        return render_template("payment.html", amount=session.get("amount", original_amount))
-
-    # Now confirm actual payment
-    discount = session.get("discount", 0)
-    amount = original_amount - discount
-    session['amount'] = amount
-
-    # UPI Payment
-    if method in ["phonepe", "gpay"]:
+    if request.method == 'POST':
+        method = request.form.get("payment_method")
+        promo_code = request.form.get("promo_code", "").strip().lower()
         user_upi_id = request.form.get("upi_id")
-        if not user_upi_id:
-            return render_template("payment.html", amount=amount, error="Please enter your UPI ID.")
-        session['payer_upi'] = user_upi_id
-        upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
-        return redirect(upi_url)
 
-    # Card Payment
-    elif method == "card":
-        if not request.form.get("card_number") or not request.form.get("expiry") or not request.form.get("cvv"):
-            return render_template("payment.html", amount=amount, error="Please fill in all card details.")
-        return redirect("/success")
+        # Base amount
+        tickets = session.get("tickets", 1)
+        category = session.get("category")
+        base_amount = CATEGORY_PRICES.get(category, 0) * tickets
 
-    # Other Payment Method
-    elif method == "other":
-        if not request.form.get("other_option"):
-            return render_template("payment.html", amount=amount, error="Please select a valid payment option.")
-        return f"<h2>🔧 '{request.form.get('other_option')}' payment method coming soon. Please use UPI for now.</h2>"
+        # Apply promo code
+        if promo_code == "enjoy":
+            amount = int(base_amount * 0.9)
+            session['promo'] = 'enjoy'
+            session['discount'] = base_amount - amount
+        else:
+            amount = base_amount
+            session['promo'] = ''
+            session['discount'] = 0
+            if promo_code != "":
+                return render_template("payment.html", amount=amount, error="❌ Invalid promo code")
 
-    elif method:
-        return render_template("payment.html", amount=amount, error="❌ Invalid payment method.")
+        session['amount'] = amount
 
-    return render_template("payment.html", amount=amount)
+        if method in ["phonepe", "gpay"]:
+            if not user_upi_id:
+                return render_template("payment.html", amount=amount, error="Please enter your UPI ID.")
+
+            upi_url = f"upi://pay?pa={YOUR_UPI_ID}&pn={RECEIVER_NAME}&am={amount}&cu=INR"
+            session['upi_url'] = upi_url
+            return redirect('/pending')
+
+        elif method == "card":
+            if not request.form.get("card_number") or not request.form.get("expiry") or not request.form.get("cvv"):
+                return render_template("payment.html", amount=amount, error="Please fill in all card details.")
+            return redirect("/success")
+
+        elif method == "other":
+            if not request.form.get("other_option"):
+                return render_template("payment.html", amount=amount, error="Please select a valid payment option.")
+            return f"<h2>🔧 '{request.form.get('other_option')}' payment method coming soon. Please use UPI for now.</h2>"
+
+        else:
+            return render_template("payment.html", amount=amount, error="Please select a payment method.")
+    else:
+        return render_template("payment.html", amount=session.get('amount', 0))
+
+@app.route('/pending')
+def pending():
+    upi_url = session.get('upi_url')
+    return render_template("pending.html", upi_url=upi_url)
 
 @app.route('/success')
 def success():
@@ -109,7 +104,6 @@ def success():
     tickets = session.get('tickets')
     category = session.get('category')
     amount = session.get('amount')
-    discount = session.get('discount', 0)
 
     qr_data = f"Name: {name}\nCategory: {category}\nTickets: {tickets}\nAmount: ₹{amount}"
     qr_img = qrcode.make(qr_data)
@@ -123,7 +117,6 @@ def success():
         tickets=tickets,
         category=category,
         amount=amount,
-        discount=discount,
         qr_code=qr_base64
     )
 
