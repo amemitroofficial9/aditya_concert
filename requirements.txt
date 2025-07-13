@@ -1,1 +1,3 @@
-"Flask\npytesseract\nPillow" 
+Flask
+pytesseract
+Pillow
