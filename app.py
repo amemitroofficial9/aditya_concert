@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session, url_for
 import os
 import pytesseract
 from PIL import Image
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "concert_secret_key"
@@ -37,6 +38,10 @@ def book():
         session["category"] = category
         session["amount"] = amount
 
+        # Clear previous promo on new booking
+        session.pop("promo", None)
+        session.pop("discount", None)
+
         return redirect("/payment")
 
     return render_template("index.html")
@@ -45,42 +50,47 @@ def book():
 def payment():
     error = None
     amount = session.get("amount", 0)
+    promo_code_input = ""  # Start empty by default
 
     if request.method == "POST":
-        promo_code = request.form.get("promo_code", "").strip().lower()
-        method = request.form.get("payment_method")
+        if 'apply_promo' in request.form:
+            # User clicked Apply promo button
+            promo_code_input = request.form.get("promo_code", "").strip()
 
-        # Apply promo logic
-        if promo_code:
-            if promo_code == "enjoy":
+            if promo_code_input.lower() == "enjoy":
                 discount = int(amount * 0.10)
                 session["promo"] = "enjoy"
                 session["discount"] = discount
                 session["amount"] = amount - discount
-                amount = amount - discount
+                amount = session["amount"]
             else:
                 error = "❌ Invalid promo code"
                 session.pop("promo", None)
                 session.pop("discount", None)
-
-        if method:
+        else:
+            # Normal payment submission
+            method = request.form.get("payment_method")
             session["payment_method"] = method
+
             if method in ["phonepe", "gpay", "other"]:
                 return redirect("/pending")
             elif method == "card":
                 return redirect("/card")
 
-    return render_template("payment.html", amount=session.get("amount", 0), error=error)
+    return render_template("payment.html", amount=amount, error=error, promo_code=promo_code_input)
 
 @app.route('/pending', methods=["GET", "POST"])
 def pending():
     if request.method == "POST":
         file = request.files.get("payment_screenshot")
         if file:
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
-            # Use pytesseract to extract text from the image
+            # If on Windows, uncomment and update path:
+            # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
             try:
                 text = pytesseract.image_to_string(Image.open(filepath))
                 if "shah priyal shripal bhai" in text.lower():
@@ -94,6 +104,7 @@ def pending():
 
 @app.route('/card', methods=["GET", "POST"])
 def card():
+    # Implement real card payment logic if needed
     return render_template("card_payment.html")
 
 @app.route('/success')

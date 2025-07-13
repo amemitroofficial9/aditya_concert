@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payment - Concert Booking</title>
   <style>
+    /* Your existing styles here */
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
@@ -56,17 +57,18 @@
       border: 1px solid #ccc;
     }
 
-    .promo-row label.apply-label {
-      color: #007bff;
-      cursor: pointer;
+    .promo-row button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
       font-size: 16px;
-      padding: 6px 12px;
       border-radius: 6px;
-      user-select: none;
+      cursor: pointer;
     }
 
-    .promo-row label.apply-label:hover {
-      text-decoration: underline;
+    .promo-row button:hover {
+      background: #0056b3;
     }
 
     .hidden {
@@ -85,7 +87,7 @@
       font-weight: bold;
     }
 
-    button[type="submit"] {
+    button[type="submit"].pay-btn {
       width: 100%;
       padding: 12px;
       background: #28a745;
@@ -110,7 +112,16 @@
       <p class="error">{{ error }}</p>
     {% endif %}
 
-    <form method="POST" action="/payment">
+    <form method="POST" action="/payment" id="promoForm">
+      <label>🎁 Promo Code</label>
+      <div class="promo-row">
+        <input type="text" name="promo_code" id="promo_code" placeholder="Enter promo code" value="{{ session.promo if session.promo }}">
+        <button type="submit" name="apply_promo" value="yes">Apply</button>
+      </div>
+    </form>
+
+    <form method="POST" action="/payment" id="paymentForm">
+      <input type="hidden" name="promo_code" value="{{ session.promo if session.promo }}">
       <label>Select Payment Method</label>
       <select name="payment_method" id="payment_method" required onchange="showFields()">
         <option value="">-- Choose an option --</option>
@@ -119,14 +130,6 @@
         <option value="card">💳 Debit/Credit Card</option>
         <option value="other">🌐 Other Payment Method</option>
       </select>
-
-      <label>🎁 Promo Code</label>
-      <div class="promo-row">
-        <input type="text" name="promo_code" id="promo_code" placeholder="Enter promo code" value="{{ session.promo if session.promo }}">
-        <label class="apply-label" onclick="applyPromo()">Apply</label>
-      </div>
-
-      <input type="hidden" name="apply_promo" value="yes" />
 
       <div id="upi_section" class="hidden">
         <label>Enter Your UPI ID</label>
@@ -154,7 +157,7 @@
         </select>
       </div>
 
-      <button type="submit">Proceed to Pay</button>
+      <button type="submit" class="pay-btn">Proceed to Pay</button>
     </form>
   </div>
 
@@ -172,10 +175,6 @@
       } else if (method === "other") {
         document.getElementById("other_section").classList.remove("hidden");
       }
-    }
-
-    function applyPromo() {
-      document.querySelector("form").submit();
     }
   </script>
 </body>
