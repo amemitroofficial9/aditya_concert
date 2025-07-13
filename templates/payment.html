@@ -45,9 +45,6 @@
     .promo-row input {
       flex: 1;
       padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
     }
     .promo-row button {
       background: #007bff;
@@ -61,20 +58,10 @@
     .promo-row button:hover {
       background: #0056b3;
     }
-    .hidden {
-      display: none;
-    }
-    .error {
-      color: red;
-      font-size: 14px;
-      text-align: center;
-    }
-    .discount {
-      color: green;
-      text-align: center;
-      font-weight: bold;
-    }
-    button[type="submit"].pay-btn {
+    .hidden { display: none; }
+    .error { color: red; text-align: center; font-size: 14px; }
+    .discount { color: green; text-align: center; font-weight: bold; }
+    button.pay-btn {
       width: 100%;
       padding: 12px;
       background: #28a745;
@@ -83,6 +70,18 @@
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
+    }
+    .qr-box {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .qr-box img {
+      width: 200px;
+      margin-bottom: 10px;
+    }
+    .qr-box p {
+      font-size: 16px;
+      margin: 5px 0;
     }
   </style>
 </head>
@@ -102,7 +101,7 @@
     <form method="POST" action="/payment" id="promoForm">
       <label>🎁 Promo Code</label>
       <div class="promo-row">
-        <input type="text" name="promo_code" id="promo_code" placeholder="Enter promo code" value="{{ session.promo if session.promo }}">
+        <input type="text" name="promo_code" placeholder="Enter promo code" value="{{ session.promo if session.promo }}">
         <button type="submit" name="apply_promo" value="yes">Apply</button>
       </div>
     </form>
@@ -110,7 +109,7 @@
     <form method="POST" action="/payment" id="paymentForm">
       <input type="hidden" name="promo_code" value="{{ session.promo if session.promo }}">
       <label>Select Payment Method</label>
-      <select name="payment_method" id="payment_method" required>
+      <select name="payment_method" id="payment_method" required onchange="onPaymentMethodChange(event)">
         <option value="">-- Choose an option --</option>
         <option value="phonepe">📱 PhonePe UPI</option>
         <option value="gpay">📱 Google Pay UPI</option>
@@ -120,7 +119,7 @@
 
       <div id="upi_section" class="hidden">
         <label>Enter Your UPI ID</label>
-        <input type="text" name="upi_id" placeholder="example@ybl or example@okaxis">
+        <input type="text" name="upi_id" id="upi_id" placeholder="example@ybl">
       </div>
 
       <div id="card_section" class="hidden">
@@ -144,46 +143,16 @@
 
       <button type="submit" class="pay-btn">Proceed to Pay</button>
     </form>
+
+    <div class="qr-box">
+      <p>OR scan to pay:</p>
+      <img src="/static/qr.png" alt="QR Code to pay">
+      <p><strong>UPI ID:</strong> 9998143506@ybl</p>
+      <p>After payment, please upload screenshot to confirm.</p>
+    </div>
   </div>
 
   <script>
-    const methodDropdown = document.getElementById("payment_method");
-    const form = document.getElementById("paymentForm");
-
-    methodDropdown.addEventListener("change", function (e) {
-      const method = e.target.value;
-      showFields(method);
-    });
-
-    form.addEventListener("submit", function (e) {
-      const method = methodDropdown.value;
-
-      if (method === "phonepe" || method === "gpay") {
-        e.preventDefault();
-
-        const upiId = document.querySelector('input[name="upi_id"]').value.trim();
-        if (!upiId) {
-          alert("Please enter your UPI ID.");
-          return;
-        }
-
-        const myUpiId = "9998143506@ybl";  // your UPI ID
-        const payeeName = "Priyal Shah";
-        const txnNote = "Concert Ticket Payment";
-        const txnId = "TXN" + Date.now();
-        const amount = {{ amount }}; // Flask will replace this
-
-        const upiUrl = `upi://pay?pa=${encodeURIComponent(myUpiId)}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(txnNote)}&tid=${txnId}`;
-
-        window.location.href = upiUrl;
-
-        setTimeout(() => {
-          alert("After completing the payment, upload the screenshot to confirm.");
-          window.location.href = "/pending";
-        }, 1000);
-      }
-    });
-
     function showFields(method) {
       document.getElementById("upi_section").classList.add("hidden");
       document.getElementById("card_section").classList.add("hidden");
@@ -196,6 +165,36 @@
       } else if (method === "other") {
         document.getElementById("other_section").classList.remove("hidden");
       }
+    }
+
+    function onPaymentMethodChange(event) {
+      const method = event.target.value;
+      showFields(method);
+
+      const form = document.getElementById("paymentForm");
+      form.onsubmit = function(e) {
+        if (method === "phonepe" || method === "gpay") {
+          e.preventDefault();
+          const upiId = document.getElementById("upi_id").value.trim();
+          if (!upiId) {
+            alert("Please enter your UPI ID.");
+            return;
+          }
+          const amount = {{ amount }};
+          const upiUrl = `upi://pay?pa=9998143506@ybl&pn=Priyal%20Shah&am=${amount}&cu=INR&tn=Concert%20Ticket`;
+          
+          const isMobile = /iPhone|Android/i.test(navigator.userAgent);
+          if (isMobile) {
+            window.location.href = upiUrl;
+            setTimeout(() => {
+              alert("After completing payment, please upload your screenshot.");
+              window.location.href = "/pending";
+            }, 3000);
+          } else {
+            alert("Please scan the QR code below or copy UPI ID to pay manually.");
+          }
+        }
+      };
     }
   </script>
 </body>
