@@ -110,7 +110,7 @@
     <form method="POST" action="/payment" id="paymentForm">
       <input type="hidden" name="promo_code" value="{{ session.promo if session.promo }}">
       <label>Select Payment Method</label>
-      <select name="payment_method" id="payment_method" required onchange="onPaymentMethodChange(event)">
+      <select name="payment_method" id="payment_method" required>
         <option value="">-- Choose an option --</option>
         <option value="phonepe">📱 PhonePe UPI</option>
         <option value="gpay">📱 Google Pay UPI</option>
@@ -126,10 +126,8 @@
       <div id="card_section" class="hidden">
         <label>Card Number</label>
         <input type="text" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19">
-
         <label>Expiry Date</label>
         <input type="text" name="expiry" placeholder="MM/YY">
-
         <label>CVV</label>
         <input type="text" name="cvv" placeholder="123" maxlength="4">
       </div>
@@ -163,54 +161,10 @@
       }
     }
 
-    function onPaymentMethodChange(event) {
-      const method = event.target.value;
+    document.getElementById("payment_method").addEventListener("change", function (e) {
+      const method = e.target.value;
       showFields(method);
-
-      if(method === "phonepe" || method === "gpay") {
-        // Remove any old listeners
-        const oldForm = document.getElementById('paymentForm');
-        const newForm = oldForm.cloneNode(true);
-        oldForm.parentNode.replaceChild(newForm, oldForm);
-
-        newForm.addEventListener('submit', function(e) {
-          e.preventDefault(); // Prevent actual form submit
-          openUpiApp(method);
-        });
-      } else {
-        // Remove any UPI-specific submit listener by resetting form (if needed)
-        const oldForm = document.getElementById('paymentForm');
-        const newForm = oldForm.cloneNode(true);
-        oldForm.parentNode.replaceChild(newForm, oldForm);
-      }
-    }
-
-    function openUpiApp(method) {
-      const amount = {{ amount }}; // from Flask backend
-      const upiInput = document.querySelector('input[name="upi_id"]');
-      const upiId = upiInput ? upiInput.value.trim() : "";
-
-      if(!upiId) {
-        alert("Please enter your UPI ID.");
-        return;
-      }
-
-      // Your real UPI ID here:
-      const myUpiId = "9998143506@ybl"; // <-- Replace this with your actual UPI ID
-      const payeeName = "Priyal shah";       // <-- Replace this with your name or business name
-      const txnNote = "Concert Ticket Payment";
-      const txnId = "TXN" + Date.now();
-
-      // Build the UPI payment URL
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(myUpiId)}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(txnNote)}&tid=${txnId}`;
-
-      // Open UPI payment app
-      window.location.href = upiUrl;
-
-      // After redirecting, show alert and send user to screenshot upload page
-      alert("After completing payment in your UPI app, please upload your payment screenshot to confirm.");
-      window.location.href = "/pending";
-    }
+    });
   </script>
 </body>
 </html>
