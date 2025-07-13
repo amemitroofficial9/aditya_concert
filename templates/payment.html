@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payment - Concert Booking</title>
   <style>
-    /* Your existing styles here */
+    /* ... your existing styles ... */
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
@@ -15,7 +15,6 @@
       min-height: 100vh;
       margin: 0;
     }
-
     .container {
       background: white;
       padding: 20px;
@@ -24,17 +23,14 @@
       max-width: 500px;
       width: 90%;
     }
-
     h2, p {
       text-align: center;
     }
-
     label {
       display: block;
       margin: 12px 0 5px;
       font-weight: bold;
     }
-
     input, select {
       width: 100%;
       padding: 10px;
@@ -42,13 +38,11 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     .promo-row {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-
     .promo-row input {
       flex: 1;
       padding: 10px;
@@ -56,7 +50,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     .promo-row button {
       background: #007bff;
       color: white;
@@ -66,27 +59,22 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     .promo-row button:hover {
       background: #0056b3;
     }
-
     .hidden {
       display: none;
     }
-
     .error {
       color: red;
       font-size: 14px;
       text-align: center;
     }
-
     .discount {
       color: green;
       text-align: center;
       font-weight: bold;
     }
-
     button[type="submit"].pay-btn {
       width: 100%;
       padding: 12px;
@@ -123,7 +111,7 @@
     <form method="POST" action="/payment" id="paymentForm">
       <input type="hidden" name="promo_code" value="{{ session.promo if session.promo }}">
       <label>Select Payment Method</label>
-      <select name="payment_method" id="payment_method" required onchange="showFields()">
+      <select name="payment_method" id="payment_method" required onchange="onPaymentMethodChange(event)">
         <option value="">-- Choose an option --</option>
         <option value="phonepe">📱 PhonePe UPI</option>
         <option value="gpay">📱 Google Pay UPI</option>
@@ -162,8 +150,7 @@
   </div>
 
   <script>
-    function showFields() {
-      const method = document.getElementById("payment_method").value;
+    function showFields(method) {
       document.getElementById("upi_section").classList.add("hidden");
       document.getElementById("card_section").classList.add("hidden");
       document.getElementById("other_section").classList.add("hidden");
@@ -175,6 +162,50 @@
       } else if (method === "other") {
         document.getElementById("other_section").classList.remove("hidden");
       }
+    }
+
+    function onPaymentMethodChange(event) {
+      const method = event.target.value;
+      showFields(method);
+
+      if(method === "phonepe" || method === "gpay") {
+        // Prevent normal form submission and trigger UPI app open
+        event.target.form.addEventListener('submit', function(e) {
+          e.preventDefault(); // Prevent form submission
+          openUpiApp(method);
+        }, { once: true });  // only once to avoid multiple listeners
+      } else {
+        // Remove any previously attached submit event listeners for UPI
+        const form = document.getElementById('paymentForm');
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+      }
+    }
+
+    function openUpiApp(method) {
+      // Get amount and UPI ID
+      const amount = {{ amount }}; // From Jinja
+      const upiInput = document.querySelector('input[name="upi_id"]');
+      const upiId = upiInput ? upiInput.value.trim() : "";
+
+      if(!upiId) {
+        alert("Please enter your UPI ID.");
+        return;
+      }
+
+      const payeeName = "AdityaConcert";  // Replace with your payee name
+      const txnNote = "Concert Ticket Payment";
+      const txnId = "TXN" + Date.now();  // Unique txn id
+
+      // Build UPI URL scheme
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(txnNote)}&tid=${txnId}`;
+
+      // Redirect to UPI app
+      window.location.href = upiUrl;
+
+      // Optional: After redirect, you can show a message or redirect to a page to upload screenshot or confirm payment
+      alert("After completing payment in your UPI app, please upload your payment screenshot to confirm.");
+      window.location.href = "/pending";  // redirect user to screenshot upload page
     }
   </script>
 </body>
